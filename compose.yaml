@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+
+  backend:
+    container_name: 'backend'
+    image: 'backend'
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+     - "5000:5000"
+    depends_on:
+     - "db"
+    networks:
+      - adventure-network
+
+  db:
+    container_name: 'db'
+    image: postgres
+    environment:
+      # change this for a "real" app!
+      POSTGRES_PASSWORD: password
+    networks:
+      - adventure-network
+
+networks:
+  adventure-network:
+    driver: bridge

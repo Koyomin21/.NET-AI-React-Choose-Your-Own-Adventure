@@ -20,7 +20,7 @@ public class ApplicationDbContext : DbContext
     {
         // TODO: Add Configuration Helper instead
         var connectionString = _persistenceOptions.ConnectionString;
-        // optionsBuilder.UseNpgsql
+        optionsBuilder.UseNpgsql(connectionString);
     }
 
 }

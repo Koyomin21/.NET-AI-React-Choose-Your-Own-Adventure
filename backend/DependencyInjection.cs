@@ -1,5 +1,4 @@
-
-
+using Persistence;
 using Services.Implementations;
 using Services.Interfaces;
 
@@ -17,5 +16,6 @@ public static class DependencyInjection
             throw new InvalidOperationException($"Missing `{PersistenceOptions.SectionName}` section in Configuration");
 
         services.Configure<PersistenceOptions>(persistenceSection);
+        services.AddDbContext<ApplicationDbContext>();
     }
 }
