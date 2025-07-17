@@ -9,9 +9,9 @@ public static class DependencyInjection
         services.AddScoped<IStoryService, StoryService>();
     }
 
-    public static void AddPersistance(this IServiceCollection services, IConfiguration configuraiton)
+    public static void AddPersistance(this IServiceCollection services, IConfiguration configuraton)
     {
-        var persistenceSection = configuraiton.GetSection(PersistenceOptions.SectionName);
+        var persistenceSection = configuraton.GetSection(PersistenceOptions.SectionName);
         if (!persistenceSection.Exists())
             throw new InvalidOperationException($"Missing `{PersistenceOptions.SectionName}` section in Configuration");
 

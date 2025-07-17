@@ -1,7 +1,7 @@
 
 public class PersistenceOptions
 {
-    public const string SectionName = "Persistance";
+    public const string SectionName = "Persistence";
     public string ConnectionString { get; set; } = string.Empty;
 
 }

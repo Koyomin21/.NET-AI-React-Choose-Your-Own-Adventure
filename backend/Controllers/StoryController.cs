@@ -1,16 +1,26 @@
 using Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Persistence.Entities;
+using Services.Interfaces;
 
 [ApiController]
 [Route("[controller]")]
 public class StoryController : ControllerBase
 {
 
+    private readonly IStoryService _storyService;
+    private static int Id = 1;
+
+    public StoryController(IStoryService storyService)
+    {
+        _storyService = storyService;
+    }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(string id, CancellationToken cancellationToken)
     {
-        return Ok("Success");
+        var story = await _storyService.GetStoryAsync(int.Parse(id), cancellationToken);
+        return Ok(story);
     }
 
     [HttpGet("{id}/complete")]
@@ -20,9 +30,17 @@ public class StoryController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody] CreateStoryDto dto)
+    public async Task<IActionResult> Post([FromBody] CreateStoryDto dto, CancellationToken cancellationToken)
     {
-        return Ok();
+        var story = new Story(
+            Id++,
+            title:dto.Theme,
+            sessionId: Guid.NewGuid().ToString(),
+            createdAt: DateTime.UtcNow
+        );
+
+        var createdStory = await _storyService.CreateStoryAsync(story, cancellationToken);
+        return Ok(createdStory);
     }
     
 
