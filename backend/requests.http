@@ -1,0 +1,21 @@
+@http_base_url = http://localhost:8000
+
+### Create Story
+POST {{http_base_url}}/story
+Accept: application/json
+Content-Type: application/json
+
+{
+    "theme": "Seagulls"
+}
+
+###
+
+### Get story
+@storyId = 2
+
+GET {{http_base_url}}/story/{{storyId}}
+Accept: application/json
+
+
+###

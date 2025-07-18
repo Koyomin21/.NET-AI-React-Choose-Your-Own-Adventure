@@ -12,7 +12,7 @@ public class Story
     public DateTimeOffset CreatedAt { get; set; }
 
     [ForeignKey("RootNodeId")]
-    public int RootNodeId { get; set; }
-    public StoryNode RootNode { get; set; }
+    public int? RootNodeId { get; set; }
+    public StoryNode? RootNode { get; set; }
 
 }

@@ -1,6 +1,0 @@
-@Choose_Your_Own_Adventure_HostAddress = http://localhost:5079
-
-GET {{Choose_Your_Own_Adventure_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

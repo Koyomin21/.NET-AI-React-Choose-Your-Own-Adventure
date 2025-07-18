@@ -7,6 +7,6 @@ public class StoryNode
     public bool IsEnding { get; private set; }
     public bool IsWinningEnding { get; private  set; }
 
-    public IReadOnlyCollection<StoryOption> Options { get; private set; }
+    public IReadOnlyCollection<StoryOption>? Options { get; private set; }
 
 }

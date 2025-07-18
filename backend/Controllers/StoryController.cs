@@ -32,14 +32,16 @@ public class StoryController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] CreateStoryDto dto, CancellationToken cancellationToken)
     {
-        var story = new Story(
-            Id++,
-            title:dto.Theme,
-            sessionId: Guid.NewGuid().ToString(),
-            createdAt: DateTime.UtcNow
-        );
+        var story = new Story
+        {
+            Id = Id++,
+            Title = dto.Theme,
+            SessionId = Guid.NewGuid().ToString(),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
 
         var createdStory = await _storyService.CreateStoryAsync(story, cancellationToken);
+        
         return Ok(createdStory);
     }
     
