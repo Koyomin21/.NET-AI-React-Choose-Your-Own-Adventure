@@ -8,17 +8,26 @@ namespace Services.Implementations;
 public class StoryService : IStoryService
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IChatService _chatService;
 
-    public StoryService(ApplicationDbContext dbContext)
+    public StoryService(ApplicationDbContext dbContext, IChatService chatService)
     {
         _dbContext = dbContext;
+        _chatService = chatService;
     }
 
-    public Task<Story> CreateStoryAsync(Story story, CancellationToken cancellationToken)
+    public async Task<Story> CreateStoryAsync(string theme, CancellationToken cancellationToken)
     {
+        //TODO: Temporary, for tests
+        var story =
+            await _chatService.GenerateStoryAsync(theme, cancellationToken);
+
+        return story;
+        
         _dbContext.Stories.Add(story);
-        return _dbContext.SaveChangesAsync(cancellationToken)
-            .ContinueWith(_ => story, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return story;
     }
 
     public Task<Story> GetStoryAsync(int storyId, CancellationToken cancellationToken)

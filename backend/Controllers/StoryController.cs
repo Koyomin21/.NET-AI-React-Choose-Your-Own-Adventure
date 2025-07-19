@@ -24,23 +24,15 @@ public class StoryController : ControllerBase
     }
 
     [HttpGet("{id}/complete")]
-    public async Task<IActionResult> GetComplete(string id, CancellationToken cancellationToken)
+    public Task<IActionResult> GetComplete(string id, CancellationToken cancellationToken)
     {
-        return Ok("Success");
+        return Task.FromResult<IActionResult>(Ok("Success"));
     }
 
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] CreateStoryDto dto, CancellationToken cancellationToken)
     {
-        var story = new Story
-        {
-            Id = Id++,
-            Title = dto.Theme,
-            SessionId = Guid.NewGuid().ToString(),
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-
-        var createdStory = await _storyService.CreateStoryAsync(story, cancellationToken);
+        var createdStory = await _storyService.CreateStoryAsync(dto.Theme, cancellationToken);
         
         return Ok(createdStory);
     }
