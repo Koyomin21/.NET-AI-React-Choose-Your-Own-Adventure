@@ -9,8 +9,10 @@ services:
      - "8000:8000"
      - "8001:8001"
     depends_on:
-     - "db"
-     - "ollama"
+      db:
+        condition: service_started
+      ollama:
+        condition: service_healthy
 
   db:
     container_name: 'ai-adventure.database'
@@ -28,4 +30,20 @@ services:
     ports:
       - "11434:11434"
     environment:
-      - MODEL=llama3.2
+      - MODEL=llama3
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "
+      ollama serve &
+      until curl -s http://localhost:11434 > /dev/null; do sleep 2; done &&
+      ollama pull llama3
+      wait
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - ./containers/ollama_data:/root/.ollama
