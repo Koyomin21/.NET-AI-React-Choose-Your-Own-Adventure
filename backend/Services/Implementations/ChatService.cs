@@ -13,27 +13,44 @@ public class ChatService : IChatService
 {
     private readonly AiOptions _options;
     private readonly ChatSettingsOptions _chatSettings;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ChatService> _logger;
 
-    public ChatService(IOptions<AiOptions> options, IOptions<ChatSettingsOptions> chatSettings, ILogger<ChatService> logger)
+    public ChatService(
+        IOptions<AiOptions> options,
+        IOptions<ChatSettingsOptions> chatSettings,
+        IHttpClientFactory httpClientFactory,
+        ILogger<ChatService> logger)
     {
         _options = options.Value;
         _chatSettings = chatSettings.Value;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
     public async Task<Story> GenerateStoryAsync(string theme, CancellationToken cancellationToken)
     {
-        using var ollama = new OllamaApiClient(baseUri: new Uri(_options.Ollama.Endpoint));
+        var httpClient = _httpClientFactory.CreateClient(_options.Ollama.ClientName);
+        using var ollama = new OllamaApiClient(httpClient);
 
         try
         {
-            var models = await ollama.Models.ListRunningModelsAsync(); // or equivalent method
-            Console.WriteLine($"✅ Models loaded: {string.Join(", ", models?.Models?.Select(m => m.Model) ?? [])}");
+            var modelListResponse = await ollama.Models.ListRunningModelsAsync(); // or equivalent method
+
+            _logger.LogInformation($"Models loaded: {string.Join(", ", modelListResponse?.Models?.Select(m => m.Model) ?? [])}");
+
+            // Check if the model from appsettings exists(regardless the case)
+            if (!modelListResponse.Models.Any(x => x.Model.Equals(_options.Ollama.ChatModel, StringComparison.OrdinalIgnoreCase)))
+            {
+
+                _logger.LogInformation($"Trying to pull the model: {_options.Ollama.ChatModel}");
+                await ollama.Models.PullModelAsync(_options.Ollama.ChatModel, cancellationToken: cancellationToken).EnsureSuccessAsync();
+                _logger.LogInformation($"Successfully pulled the model");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Ollama error: {ex}");
+            _logger.LogError(ex, $"Ollama error: {ex}");
         }
         string outputStoryFormat = @"
         {
@@ -80,30 +97,46 @@ public class ChatService : IChatService
                 Don't simplify or omit any part of the story structure. 
                 Don't add any text outside of the JSON structure.";
 
-        var chat = ollama.Chat(
-            model: _options.Ollama.ChatModel,
-            systemMessage: systemMessage
-        );
+        // var chat = ollama.Chat(
+        //     model: _options.Ollama.ChatModel,
+        //     systemMessage: systemMessage
+        // );
 
         try
         {
-            var response = await chat.SendAsync($"Generate a story with a theme: {theme}", cancellationToken: cancellationToken);
-            _logger.LogInformation("Chat response: {Response}", response);
 
+            var request = new GenerateCompletionRequest
+            {
+                Model = _options.Ollama.ChatModel,
+                Prompt = $"Generate a story with a theme: {theme}",
+                System = systemMessage,
+                Stream = false,
+                Format = ResponseFormatEnum.Json
+            };
 
-            var story = JsonSerializer.Deserialize<Story>(response.Content);
+            _logger.LogInformation("Making request to Ollama: {request}", JsonSerializer.Serialize(request));
+            var response = await ollama.Completions.GenerateCompletionAsync(request, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Ollama response: {Response}", response.Response);
+
+            var story = JsonSerializer.Deserialize<Story>(response.Response!);
 
             if (story == null)
             {
-                _logger.LogError("Failed to deserialize story from response: {Response}", response.Content);
+                _logger.LogError("Failed to deserialize story from response: {Response}", response.Response);
                 throw new InvalidOperationException("Failed to generate a valid story.");
             }
 
             return story;
         }
+        catch (Exception ex)
+        {
+            // TODO: Log error and find out why deserialization is not successful
+        }
         finally
         {
-            chat.PrintMessages();
+            // chat.PrintMessages();
+            _logger.LogInformation("Finished interaction with ollama");
         }
 
 

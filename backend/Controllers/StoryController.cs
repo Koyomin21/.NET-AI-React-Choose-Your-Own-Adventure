@@ -7,13 +7,14 @@ using Services.Interfaces;
 [Route("[controller]")]
 public class StoryController : ControllerBase
 {
-
+    private readonly IChatService _chatService;
     private readonly IStoryService _storyService;
     private static int Id = 1;
 
-    public StoryController(IStoryService storyService)
+    public StoryController(IStoryService storyService, IChatService chatService)
     {
         _storyService = storyService;
+        _chatService = chatService;
     }
 
     [HttpGet("{id}")]
@@ -33,8 +34,16 @@ public class StoryController : ControllerBase
     public async Task<IActionResult> Post([FromBody] CreateStoryDto dto, CancellationToken cancellationToken)
     {
         var createdStory = await _storyService.CreateStoryAsync(dto.Theme, cancellationToken);
-        
+
         return Ok(createdStory);
+    }
+
+    [HttpPost("{theme}")]
+    public async Task<IActionResult> Test(string theme, CancellationToken cancellationToken)
+    {
+        var response = await _chatService.GenerateStoryAsync(theme, cancellationToken);
+
+        return Ok(response);
     }
     
 
